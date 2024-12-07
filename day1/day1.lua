@@ -2,15 +2,27 @@
 
 local inspect = require("inspect")
 local pl = require("pl.utils")
+local fun = require("fun")
 
 local filename = arg[1]
 print("Reading file: " .. filename)
 
-local lines = {}
+local list1 = {}
+local list2 = {}
 for line in io.lines(filename) do
-	table.insert(lines, line)
+	local split_line = pl.split(line)
+	table.insert(list1, split_line[1])
+	table.insert(list2, split_line[2])
 end
 
-print(inspect(lines))
+table.sort(list1)
+table.sort(list2)
 
-return lines
+print(inspect(list1))
+print(inspect(list2))
+
+local sum_of_differences = fun.zip(list1, list2):reduce(function(acc, x, y)
+	return acc + math.abs(x - y)
+end, 0)
+
+print(sum_of_differences)

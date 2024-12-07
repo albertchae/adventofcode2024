@@ -8,6 +8,7 @@ dependencies = {
 	--"lua >= 5.1",
 	"inspect >= 3.0", -- Add the package you installed
 	"penlight",
+	"fun",
 }
 
 description = {
