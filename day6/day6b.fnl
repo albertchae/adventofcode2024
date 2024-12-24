@@ -99,24 +99,51 @@
     (setmetatable visited defaultmt)
     (simulate-helper grid visited starting-position)))
 
+(local original-grid-no-guard (let [copied-grid (tablex.deepcopy grid)
+                                    guard-position (find-guard grid)
+                                    (current-row current-col) (table.unpack guard-position)]
+                                (tset copied-grid current-row current-col ".")
+                                copied-grid))
+
 (local visited (simulate grid))
 
 (print (fennel.view visited))
 (print (table-length visited))
 
+(fn simulate-until-loop [visited grid current-position]
+  (let [(current-row current-col) (table.unpack current-position)
+        current-guard (. grid current-row current-col)
+        current-visited (. visited (fennel.view current-position))
+        (updated-grid next-position) (tick grid current-position)]
+    (if (. current-visited current-guard)
+        true
+        (if (= nil next-position)
+            false
+            (simulate-until-loop visited updated-grid next-position)))))
+
 (fn is-valid-loop-blocker? [position visited]
   (accumulate [result false position-increment orientation (pairs blocking-position-increment-to-orientation)]
     (let [(row col) (table.unpack position)
-          turn-right-orientation (turn-right-90-degrees orientation)
           check-row (+ row (. position-increment 1))
           check-col (+ col (. position-increment 2))
-          check-position (. visited (fennel.view [check-row check-col]))]
-      (or (and (not= nil check-position)
-               (not= nil (. check-position orientation))
-               (not= nil (. check-position turn-right-orientation)))
+          visited-orientations (. visited (fennel.view [check-row check-col]))]
+      (or (and (not= nil visited-orientations)
+               (not= nil (. visited-orientations orientation))
+               (let [copied-grid (tablex.deepcopy original-grid-no-guard)]
+                 (tset copied-grid row col "#")
+                 (tset copied-grid check-row check-col (turn-right-90-degrees orientation))
+                 (simulate-until-loop visited copied-grid [check-row check-col])))
           result))))
 
-(print (fennel.view (is-valid-loop-blocker? [7 4] visited)))
+(assert-repl (not (is-valid-loop-blocker? [7 4] visited)))
+(assert-repl (not (is-valid-loop-blocker? [8 7] visited)))
+(assert-repl (not (is-valid-loop-blocker? [8 8] visited)))
+(assert-repl (not (is-valid-loop-blocker? [9 2] visited)))
+(assert-repl (not (is-valid-loop-blocker? [9 4] visited)))
+(assert-repl (not (is-valid-loop-blocker? [10 8] visited)))
+(assert-repl (is-valid-loop-blocker? [4 5] visited))
+(assert-repl (is-valid-loop-blocker? [2 8] visited))
+
 
 (fn find-loop-blockers [grid visited]
   (accumulate [blockers [] position-string _ (pairs visited)]
