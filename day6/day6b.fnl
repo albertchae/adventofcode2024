@@ -99,11 +99,7 @@
     (setmetatable visited defaultmt)
     (simulate-helper grid visited starting-position)))
 
-(local original-grid-no-guard (let [copied-grid (tablex.deepcopy grid)
-                                    guard-position (find-guard grid)
-                                    (current-row current-col) (table.unpack guard-position)]
-                                (tset copied-grid current-row current-col ".")
-                                copied-grid))
+(local original-grid (tablex.deepcopy grid))
 
 (local visited (simulate grid))
 
@@ -124,45 +120,43 @@
               (tset visited (fennel.view current-position) current-visited)
               (simulate-until-loop visited updated-grid next-position))))))
 
-(fn is-valid-loop-blocker? [position visited]
+(fn is-valid-loop-blocker? [grid
+                            blocker-candidate-position
+                            visited
+                            starting-position]
   (accumulate [result false position-increment orientation (pairs blocking-position-increment-to-orientation)]
-    (let [(row col) (table.unpack position)
-          check-row (+ row (. position-increment 1))
-          check-col (+ col (. position-increment 2))
-          visited-orientations (. visited (fennel.view [check-row check-col]))]
-      (or (and (not= nil visited-orientations)
-               (not= nil (. visited-orientations orientation))
-               (let [copied-grid (tablex.deepcopy original-grid-no-guard)
-                     new-visited {}
-                     defaultmt {:__index (fn [] {})}]
-                 (setmetatable new-visited defaultmt)
-                 (tset copied-grid row col "#")
-                 (tset copied-grid check-row check-col
-                       (turn-right-90-degrees orientation))
-                 (simulate-until-loop new-visited copied-grid
-                                      [check-row check-col]))) result))))
+    (let [(row col) (table.unpack blocker-candidate-position)]
+      (or (let [copied-grid (tablex.deepcopy grid)
+                new-visited {}
+                defaultmt {:__index (fn [] {})}]
+            (setmetatable new-visited defaultmt)
+            (tset copied-grid row col "#")
+            (simulate-until-loop new-visited copied-grid starting-position))
+          result))))
 
 ; sample.input
-; (print (assert-repl (is-valid-loop-blocker? [7 4] visited)))
-; (print (assert-repl (is-valid-loop-blocker? [8 7] visited)))
-; (print (assert-repl (is-valid-loop-blocker? [8 8] visited)))
-; (print (assert-repl (is-valid-loop-blocker? [9 2] visited)))
-; (print (assert-repl (is-valid-loop-blocker? [9 4] visited)))
-; (print (assert-repl (is-valid-loop-blocker? [10 8] visited)))
-; (print (assert-repl (not (is-valid-loop-blocker? [4 5] visited))))
-; (print (assert-repl (not (is-valid-loop-blocker? [2 8] visited))))
-
+; (print (assert-repl (is-valid-loop-blocker? original-grid [7 4] visited [7 5])))
+; (print (assert-repl (is-valid-loop-blocker? original-grid [8 7] visited [7 5])))
+; (print (assert-repl (is-valid-loop-blocker? original-grid [8 8] visited [7 5])))
+; (print (assert-repl (is-valid-loop-blocker? original-grid [9 2] visited [7 5])))
+; (print (assert-repl (is-valid-loop-blocker? original-grid [9 4] visited [7 5])))
+; (print (assert-repl (is-valid-loop-blocker? original-grid [10 8] visited [7 5])))
+; (print (assert-repl (not (is-valid-loop-blocker? original-grid [4 5] visited [7 5]))))
+; (print (assert-repl (not (is-valid-loop-blocker? original-grid [2 8] visited [7 5]))))
 
 (fn find-loop-blockers [grid visited]
-  (accumulate [blockers [] position-string _ (pairs visited)]
-    (let [position (fennel.eval position-string)]
-      (print (fennel.view position))
-      (if (is-valid-loop-blocker? position visited)
-          (do
-            (table.insert blockers position)
-            blockers)
-          blockers))))
+  (let [starting-position (find-guard grid)]
+    (accumulate [blockers [] position-string _ (pairs visited)]
+      (let [position (fennel.eval position-string)]
+        ;(print (fennel.view position))
+        (if (= (fennel.view starting-position) position-string)
+            blockers
+            (if (is-valid-loop-blocker? grid position visited starting-position)
+                (do
+                  (table.insert blockers position)
+                  blockers)
+                blockers))))))
 
-(local loop-blockers (find-loop-blockers grid visited))
+(local loop-blockers (find-loop-blockers original-grid visited))
 ;(print (fennel.view loop-blockers))
 (print (length loop-blockers))
