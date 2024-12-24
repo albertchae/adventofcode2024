@@ -1,6 +1,7 @@
 (local inspect (require :inspect))
 
 (local pl (require :pl.utils))
+(local tablex (require :pl.tablex))
 
 (local fun (require :fun))
 (local fennel (require :fennel))
@@ -61,29 +62,35 @@
 ; if out of bounds, done
 ; else move
 
-(fn simulate-helper [grid visited current-position]
+(fn tick [grid current-position]
   (let [(current-row current-col) (table.unpack current-position)
         current-guard (. grid current-row current-col)
-        current-visited (. visited (fennel.view current-position))
-        ; (. grid (table.unpack current-position) doesn't work?
         direction-coordinates (direction-to-move current-guard)
         next-row (+ current-row (. direction-coordinates 1))
         next-col (+ current-col (. direction-coordinates 2))
         next-tile (. grid next-row next-col)]
+    (case next-tile
+      nil (values grid nil)
+      "#" (do
+            (tset grid current-row current-col
+                  (turn-right-90-degrees current-guard))
+            (values grid current-position))
+      _ (do
+          (tset grid current-row current-col ".")
+          (tset grid next-row next-col current-guard)
+          (values grid [next-row next-col])))))
+
+(fn simulate-helper [grid visited current-position]
+  (let [(current-row current-col) (table.unpack current-position)
+        current-guard (. grid current-row current-col)
+        current-visited (. visited (fennel.view current-position))
+        (updated-grid next-position) (tick grid current-position)]
     (tset current-visited current-guard true) ; (print (fennel.view grid)) ; convert position to string so we don't need to use faith deep equality ; failed trying to use __eq for indexing with sequential table so far
     (tset visited (fennel.view current-position) current-visited)
     ;(print (fennel.view visited))
     ;(print (table-length visited))
-    (case next-tile
-      nil visited
-      "#" (do
-            (tset grid current-row current-col
-                  (turn-right-90-degrees current-guard))
-            (simulate-helper grid visited current-position))
-      _ (do
-          (tset grid current-row current-col ".")
-          (tset grid next-row next-col current-guard)
-          (simulate-helper grid visited [next-row next-col])))))
+    (if (= next-position nil) visited
+        (simulate-helper grid visited next-position))))
 
 (fn simulate [grid]
   (let [visited {}
@@ -116,7 +123,8 @@
     (let [position (fennel.eval position-string)]
       (if (is-valid-loop-blocker? position visited)
           (do
-            (table.insert blockers position) blockers)
+            (table.insert blockers position)
+            blockers)
           blockers))))
 
 (print (fennel.view (find-loop-blockers grid visited)))
