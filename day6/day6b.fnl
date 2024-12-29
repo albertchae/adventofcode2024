@@ -124,15 +124,13 @@
                             blocker-candidate-position
                             visited
                             starting-position]
-  (accumulate [result false position-increment orientation (pairs blocking-position-increment-to-orientation)]
-    (let [(row col) (table.unpack blocker-candidate-position)]
-      (or (let [copied-grid (tablex.deepcopy grid)
-                new-visited {}
-                defaultmt {:__index (fn [] {})}]
-            (setmetatable new-visited defaultmt)
-            (tset copied-grid row col "#")
-            (simulate-until-loop new-visited copied-grid starting-position))
-          result))))
+  (let [(row col) (table.unpack blocker-candidate-position)
+        copied-grid (tablex.deepcopy grid)
+        new-visited {}
+        defaultmt {:__index (fn [] {})}]
+    (setmetatable new-visited defaultmt)
+    (tset copied-grid row col "#")
+    (simulate-until-loop new-visited copied-grid starting-position)))
 
 ; sample.input
 ; (print (assert-repl (is-valid-loop-blocker? original-grid [7 4] visited [7 5])))
