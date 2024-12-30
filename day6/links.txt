@@ -1,0 +1,7 @@
+cool visualization -
+https://old.reddit.com/r/adventofcode/comments/1h7y9ws/2024_day_6_part_2_finally_found_the_issue_in_my/o
+
+same bug i had for a while with not simulating from guard's original starting
+position - https://old.reddit.com/r/adventofcode/comments/1h8e0fs/2024_day_6_part_2_c_so_uh_i_found_too_many_loops/m0s7egy/
+
+LOL - https://old.reddit.com/r/adventofcode/comments/1h7xzx0/2024_day_6_bringing_back_childhood_trauma/
