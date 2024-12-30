@@ -1,0 +1,49 @@
+function docstring
+,doc
+
+lets preferred to local in function
+
+table.insert is meant for seq tables
+table.remove too
+
+collect/icollect also allow for filter in addition to map
+
+for does range
+
+if is also cond
+
+when for arbitrary number of side effects
+
+(set tbl.one 1)
+let [tbl {: one : two}] punning
+
+destructuring with punning
+
+Note that unlike many languages, nil in Lua actually represents the absence of a value, and thus tables cannot contain nil. It is an error to try to use nil as a key, and using nil as a value removes whatever entry was at that key before.
+
+hashfn - hash functions
+partial
+& for cdr
+&as destructure + all
+if for cond
+case for pattern matching
+  where for guard clauses
+match
+
+case-try railway oriented programming
+
+can use set instead of tset
+
+?. for dig in a table
+
+faccumulate or fcollect for range
+
+-> pipeline
+
+doto - do a bunch of side effects on something
+
+tail!
+
+--assert-as-repl
+
+When checking to see if a table is empty, don't use (= 0 (length t)) since length can be expensive for large tables. Instead use (= nil (next t)) which is always cheap.

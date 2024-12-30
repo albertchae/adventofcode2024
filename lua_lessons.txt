@@ -1,0 +1,89 @@
+These are all AFAICT and things I hope to learn more or be corrected about as I go
+
+Days 1-6:
+
+- Is there a way to set up project specific dependencies like cargo/npm/bundler/mix etc?
+  - So far I am using this
+  ```
+  lua init
+  ./luarocks make day1-dev-1.rockspec
+  ```
+  Using the directory specific `./luarocks` is important! However, this
+  doesn't seem to create a lockfile
+- Why does lua print out tables sometimes and othertimes not? Using
+  https://github.com/kikito/inspect.lua for now
+
+  A common pattern in the repl
+  ```
+  > fun.range(4)
+  <generator>    table: 0x6000017909c0    0
+  > fun.totable(fun.range(4))
+  table: 0x6000017bdfc0
+  > require("inspect")(fun.totable(fun.range(4)))
+  { 1, 2, 3, 4 }
+  ```
+- locals don't work in the repl
+  https://stackoverflow.com/questions/74630221/why-luas-builtin-repl-cannot-access-previously-delcared-local-vars
+- lua in general has a very small standard library. Using luafun and penlight
+  to supplement
+  - range
+  - split
+  - regex library due to implementation size
+    - had a hell of a time getting any of the third party regex libraries to
+      work for some reason
+- there is a distinction between methods and functions
+- metatable for table with default value https://www.lua.org/pil/13.4.3.html
+  - can I use this in combination with __index to update a nested table
+    seamlessly?
+- don't understand iterators yet
+- lua returning nil for OOB array access is convenient for any grid logic
+
+- What happens if you use pairs on a sequential table? and ipairs on a regular
+  table?
+- Can I set breakpoint with repl? Not sure how to use https://www.lua.org/pil/23.html
+
+- how to insert into table and return?
+- indexing by 1 has surprisingly not been an issue. Experience from matlab
+  paying off?
+
+
+Day 5:
+- pivoted to fennel
+  - https://fennel-lang.org/rationale covers almost all the issues I was
+    having with lua
+  - https://fennel-lang.org/values The exception to this rule is fennel.view which can be used independently; it addresses a severe problem in Lua's runtime semantics where tostring on a table produces nearly-useless results. 
+  - https://fennel-lang.org/lua-primer
+- using antifennel on previous solutions gave me good starter code
+  - https://git.sr.ht/~technomancy/antifennel
+- how to compute length of a non sequential table
+  - can use tablex.size which is almost the same as my handrolled one
+    https://github.com/lunarmodules/Penlight/blob/d2dc61bd8f39e3686bf97169f7aa2ef59c8835e2/lua/pl/tablex.lua#L78-L83
+- Many of the design decisions for fennel validate my lua issues
+  - fennel.view is a godsend
+
+- how to use sequential tables as keys
+
+
+https://git.sr.ht/~technomancy/faith
+
+how to point to a non rock git like faith
+
+https://stackoverflow.com/a/12898913
+
+https://fennel-lang.org/tutorial
+- Note that unlike many languages, nil in Lua actually represents the absence of a value, and thus tables cannot contain nil. It is an error to try to use nil as a key, and using nil as a value removes whatever entry was at that key before.
+
+- Return values in the repl will get pretty-printed, but calling (print tbl) will emit output like table: 0x55a3a8749ef0. If you don't already have one, it's recommended for debugging to define a printer function which calls fennel.view on its argument before printing it: (local fennel (require :fennel)) (fn _G.pp [x] (print (fennel.view x))). If you add this definition to your ~/.fennelrc file it will be available in the standard repl.
+
+
+Day 6:
+
+https://stackoverflow.com/a/64770605
+
+luajit is a separate
+luarocks --lua-version 5.1 install luasocket
+but not in project
+
+LUA_PATH=/Users/albertc/.luarocks/share/lua/5.1/?.lua
+
+luajit day6b.lua input  1137.61s user 2.96s system 99% cpu 19:01.12 total
