@@ -1,6 +1,6 @@
 (local inspect (require :inspect))
 
-(local pl (require :pl.utils))
+(local utils (require :pl.utils))
 (local tablex (require :pl.tablex))
 
 (local fun (require :fun))
@@ -62,6 +62,13 @@
 ; if out of bounds, done
 ; else move
 
+(fn position->table-key [position]
+  (table.concat position ","))
+
+(fn table-key->position [key]
+  (icollect [_ v (ipairs (utils.split key ","))]
+    (tonumber v)))
+
 (fn tick [grid current-position]
   (let [(current-row current-col) (table.unpack current-position)
         current-guard (. grid current-row current-col)
@@ -83,10 +90,10 @@
 (fn simulate-helper [grid visited current-position]
   (let [(current-row current-col) (table.unpack current-position)
         current-guard (. grid current-row current-col)
-        current-visited (. visited (fennel.view current-position))
+        current-visited (. visited (position->table-key current-position))
         (updated-grid next-position) (tick grid current-position)]
     (tset current-visited current-guard true) ; (print (fennel.view grid)) ; convert position to string so we don't need to use faith deep equality ; failed trying to use __eq for indexing with sequential table so far
-    (tset visited (fennel.view current-position) current-visited)
+    (tset visited (position->table-key current-position) current-visited)
     ;(print (fennel.view visited))
     ;(print (table-length visited))
     (if (= next-position nil) visited
@@ -109,7 +116,7 @@
 (fn simulate-until-loop [visited grid current-position]
   (let [(current-row current-col) (table.unpack current-position)
         current-guard (. grid current-row current-col)
-        current-visited (. visited (fennel.view current-position))
+        current-visited (. visited (position->table-key current-position))
         (updated-grid next-position) (tick grid current-position)]
     (if (. current-visited current-guard)
         true
@@ -117,7 +124,8 @@
             false
             (do
               (tset current-visited current-guard true)
-              (tset visited (fennel.view current-position) current-visited)
+              (tset visited (position->table-key current-position)
+                    current-visited)
               (simulate-until-loop visited updated-grid next-position))))))
 
 (fn is-valid-loop-blocker? [grid
@@ -145,9 +153,8 @@
 (fn find-loop-blockers [grid visited]
   (let [starting-position (find-guard grid)]
     (accumulate [blockers [] position-string _ (pairs visited)]
-      (let [position (fennel.eval position-string)]
-        ;(print (fennel.view position))
-        (if (= (fennel.view starting-position) position-string)
+      (let [position (table-key->position position-string)]
+        (if (= (position->table-key starting-position) position-string)
             blockers
             (if (is-valid-loop-blocker? grid position visited starting-position)
                 (do
