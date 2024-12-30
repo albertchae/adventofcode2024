@@ -6,6 +6,10 @@
 (local fun (require :fun))
 (local fennel (require :fennel))
 
+;; profile.lua isn't in luarocks so need to vendor it locally
+;; $ git clone https://github.com/2dengine/profile.lua profile
+;; (local profile (require :profile.profile))
+
 (local filename (. arg 1))
 
 (print (.. "Reading file: " filename))
@@ -162,6 +166,12 @@
                   blockers)
                 blockers))))))
 
+;; (profile.start)
+
 (local loop-blockers (find-loop-blockers original-grid visited))
+
+;; (profile.stop)
 ;(print (fennel.view loop-blockers))
+
 (print (length loop-blockers))
+;; (print (profile.report 10))
